@@ -1,11 +1,11 @@
 'use strict';
 
-const mongoose = require('mongoose');
-const User = mongoose.model('User');
+const repository = require('../repositories/user');
+const validateObj = require('../helpers/validator');
 
 module.exports.get = (req, res, next) => {
-    User
-        .find({}, 'user active')
+    repository
+        .get()
         .then((users) => {
             res.status(200).send({
                 success: true,
@@ -21,8 +21,8 @@ module.exports.get = (req, res, next) => {
 };
 
 module.exports.getById = (req, res, next) => {
-    User
-        .findById(req.params.id)
+    repository
+        .getById(req.params.id)
         .then((user) => {
             res.status(200).send({
                 success: true,
@@ -39,42 +39,66 @@ module.exports.getById = (req, res, next) => {
 
 
 module.exports.put = (req, res, next) => {
-    let newUser = new User({
-        user: 'renato.campos@br.ibm.com',
-        password: '123456'
-    });
 
-    newUser
-        .save()
-        .then((doc) => {
-            console.log('User saved successfully');
-            res.status(201).send({
-                success: true,
-                user: doc
-            });
-        })
-        .catch((err) => {
-            res.status(400).send({
-                success: false,
-                error: err
-            });
+    validateObj.isEmail(req.body.email, 'Campo email inválido!');
+
+    if (!validateObj.isValid()) {
+        res.status(400).send({
+            success: false,
+            error: validateObj.errors
         });
+    } else {
+        repository
+            .update(req.params.id, req.body)
+            .then((doc) => {
+                res.status(200).send({
+                    success: true,
+                    user: doc
+                });
+            })
+            .catch((err) => {
+                res.status(400).send({
+                    success: false,
+                    error: err
+                });
+            });
+    }
 };
 
 
 module.exports.post = (req, res, next) => {
-    let newUser = new User({
-        user: 'renato.campos@br.ibm.com',
-        password: '123456'
-    });
+    validateObj.isEmail(req.body.email, 'Campo email inválido!');
 
-    newUser
-        .save()
+    if (!validateObj.isValid()) {
+        res.status(400).send({
+            success: false,
+            error: validateObj.errors
+        });
+    } else {
+        repository
+            .create(req.body)
+            .then((doc) => {
+                res.status(201).send({
+                    success: true,
+                    user: doc
+                });
+            })
+            .catch((err) => {
+                res.status(400).send({
+                    success: false,
+                    error: err
+                });
+            });
+    }
+};
+
+
+module.exports.delete = (req, res, next) => {
+    repository
+        .delete(req.params.id)
         .then((doc) => {
-            console.log('User saved successfully');
-            res.status(201).send({
-                success: true,
-                user: doc
+            res.status(200).send({
+                success: true
             });
         })
         .catch((err) => {
@@ -83,21 +107,4 @@ module.exports.post = (req, res, next) => {
                 error: err
             });
         });
-};
-
-
-module.exports.delete = (req, res, next) => {
-    User.remove({}, (err, numRecords) => {
-        if (err) {
-            res.status(400).send({
-                success: false,
-                error: err
-            });
-        }
-
-        res.status(200).send({
-            success: true,
-            remove: numRecords
-        });
-    });
 };

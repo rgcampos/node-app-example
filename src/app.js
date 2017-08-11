@@ -81,4 +81,5 @@ app.get('/api', (req, res, next) => {
     });
 });
 
+console.log('Path app: ', process.cwd());
 module.exports = app;
